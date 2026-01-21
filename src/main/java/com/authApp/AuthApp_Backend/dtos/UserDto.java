@@ -1,7 +1,6 @@
 package com.authApp.AuthApp_Backend.dtos;
 
 import com.authApp.AuthApp_Backend.entities.Provider;
-import com.authApp.AuthApp_Backend.entities.Role;
 import lombok.*;
 
 import java.time.Instant;
@@ -20,7 +19,7 @@ public class UserDto {
     private String name;
     private String password;
     private String image;
-    private boolean enable = true;
+    private Boolean enable = true;
     private Instant createdAt = Instant.now();
     private Instant updatedAt = Instant.now();
     private String gender;

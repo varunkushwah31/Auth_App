@@ -8,6 +8,6 @@ public interface UserService {
     UserDto getUserByEmail(String email);
     UserDto updateUser(String userId, UserDto userDto);
     void deleteUser(String userId);
-    UserDto getuserById(String userId);
+    UserDto getUserById(String userId);
     Iterable<UserDto> getAllUsers();
 }

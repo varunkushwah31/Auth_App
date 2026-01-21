@@ -1,18 +1,24 @@
-package com.authApp.AuthApp_Backend.services;
+package com.authApp.AuthApp_Backend.services.Impl;
 
 import com.authApp.AuthApp_Backend.dtos.UserDto;
 import com.authApp.AuthApp_Backend.entities.Provider;
 import com.authApp.AuthApp_Backend.entities.User;
 import com.authApp.AuthApp_Backend.exceptions.ResourceNotFoundException;
+import com.authApp.AuthApp_Backend.helper.UserHelper;
 import com.authApp.AuthApp_Backend.repository.UserRepository;
+import com.authApp.AuthApp_Backend.services.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
+import java.util.UUID;
+
+
 @Service
 @RequiredArgsConstructor
-public class UserServiceImpl implements UserService{
+public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final ModelMapper modelMapper;
@@ -47,17 +53,39 @@ public class UserServiceImpl implements UserService{
 
     @Override
     public UserDto updateUser(String userId, UserDto userDto) {
-        return null;
+        UUID uuid  = UserHelper.parseUUID(userId);
+        User existingUser = userRepository
+                .findById(uuid)
+                .orElseThrow(() -> new ResourceNotFoundException("User Not Found With Given Id"));
+        if(userDto.getName() != null) existingUser.setName(userDto.getName());
+        if(userDto.getProvider() != null) existingUser.setProvider(userDto.getProvider());
+        if(userDto.getGender() != null) existingUser.setGender(userDto.getGender());
+        if(userDto.getImage() != null) existingUser.setImage(userDto.getImage());
+        if(userDto.getPassword() != null) existingUser.setPassword(userDto.getPassword());
+        if (userDto.getEnable() != null) existingUser.setEnable(userDto.getEnable());
+        existingUser.setUpdatedAt(Instant.now());
+        User updatedUser = userRepository.save(existingUser);
+        return modelMapper.map(updatedUser, UserDto.class);
+
     }
 
     @Override
+    @Transactional
     public void deleteUser(String userId) {
-
+        UUID uid = UserHelper.parseUUID(userId);
+        User user = userRepository
+                .findById(uid)
+                .orElseThrow(() -> new ResourceNotFoundException("Cannot Delete As User With This ID Doesn't Exist!!!"));
+        userRepository.delete(user);
     }
 
     @Override
-    public UserDto getuserById(String userId) {
-        return null;
+    public UserDto getUserById(String userId) {
+       UUID uuid = UserHelper.parseUUID(userId);
+       User user = userRepository
+               .findById(uuid)
+               .orElseThrow(() -> new ResourceNotFoundException("User With This ID Doesn't Exist!!!"));
+       return modelMapper.map(user,UserDto.class);
     }
 
     @Override
