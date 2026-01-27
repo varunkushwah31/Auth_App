@@ -2,19 +2,20 @@ package com.authApp.AuthApp_Backend.security;
 
 import com.authApp.AuthApp_Backend.helper.UserHelper;
 import com.authApp.AuthApp_Backend.repository.UserRepository;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.*;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.util.List;
@@ -27,6 +28,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UserRepository userRepository;
+    private static final Logger logger =
+            LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+
 
     @Override
     protected void doFilterInternal(
@@ -37,8 +41,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String header = request.getHeader("Authorization");
 
+        logger.info("Authorization header: {}", header);
+
         if (header != null && header.startsWith("Bearer ")) {
             String token = header.substring(7);
+
+            if(!jwtService.isAccessToken(token)){
+                filterChain.doFilter(request,response);
+                return;
+            }
 
             try {
                 Jws<Claims> parsedToken = jwtService.parse(token);
@@ -48,29 +59,38 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 userRepository.findById(userUuid).ifPresent(user -> {
 
-                    List<GrantedAuthority> authorities =
-                            user.getRoleSet() == null
-                                    ? List.of()
-                                    : user.getRoleSet()
-                                    .stream()
-                                    .map(role -> new SimpleGrantedAuthority(role.getName()))
-                                    .collect(Collectors.toList());
+                    //check for user enable or not
+                    if(user.isEnable()){
+                        List<GrantedAuthority> authorities =
+                                user.getRoleSet() == null
+                                        ? List.of()
+                                        : user.getRoleSet()
+                                        .stream()
+                                        .map(role -> new SimpleGrantedAuthority(role.getName()))
+                                        .collect(Collectors.toList());
 
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(
-                                    user,
-                                    null,
-                                    authorities
-                            );
+                        UsernamePasswordAuthenticationToken authentication =
+                                new UsernamePasswordAuthenticationToken(
+                                        user,
+                                        null,
+                                        authorities
+                                );
 
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                        if(SecurityContextHolder.getContext().getAuthentication() == null) {
+                            SecurityContextHolder.getContext().setAuthentication(authentication);
+                        }
+                    }
                 });
 
-            } catch (Exception ex) {
-                // Invalid JWT → clear context & return 401
-                SecurityContextHolder.clearContext();
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                return;
+            } catch (ExpiredJwtException e){
+                e.printStackTrace();
+            }catch (MalformedJwtException e){
+                e.printStackTrace();
+            }catch (JwtException e){
+                e.printStackTrace();
+            }
+            catch (Exception e){
+                e.printStackTrace();
             }
         }
 
