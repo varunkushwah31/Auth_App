@@ -8,6 +8,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NonNull;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
@@ -82,19 +83,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     }
                 });
 
-            } catch (ExpiredJwtException e){
-                e.printStackTrace();
-            }catch (MalformedJwtException e){
-                e.printStackTrace();
-            }catch (JwtException e){
-                e.printStackTrace();
-            }
-            catch (Exception e){
-                e.printStackTrace();
+            } catch (Exception e){
+                request.setAttribute("error","Token Expired");
             }
         }
 
         // VERY IMPORTANT
         filterChain.doFilter(request, response);
+    }
+
+    @Override
+    protected boolean shouldNotFilter(@NonNull HttpServletRequest request) throws ServletException {
+        return request.getRequestURI().startsWith("/api/v1/auth");
     }
 }
