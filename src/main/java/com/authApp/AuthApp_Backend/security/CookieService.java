@@ -50,4 +50,23 @@ public class CookieService {
 
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
+
+    public void clearRefreshCookie(HttpServletResponse response){
+        var builder = ResponseCookie.from(refreshTokenCookieName,"")
+                .path("/")
+                .maxAge(0)
+                .httpOnly(cookieHttpOnly)
+                .sameSite(cookieSameSite)
+                .secure(cookieSecure);
+        if (cookieDomain != null && !cookieDomain.isBlank()) {
+            builder.domain(cookieDomain);
+        }
+        ResponseCookie responseCookie = builder.build();
+        response.addHeader(HttpHeaders.SET_COOKIE,responseCookie.toString());
+    }
+
+    public void addNoStoreHeaders(HttpServletResponse response){
+            response.setHeader(HttpHeaders.CACHE_CONTROL,"no-store");
+            response.setHeader("Pragma","no-cache");
+    }
 }
