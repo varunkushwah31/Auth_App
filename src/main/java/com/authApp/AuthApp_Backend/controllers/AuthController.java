@@ -11,6 +11,7 @@ import com.authApp.AuthApp_Backend.repository.UserRepository;
 import com.authApp.AuthApp_Backend.security.CookieService;
 import com.authApp.AuthApp_Backend.security.JwtService;
 import com.authApp.AuthApp_Backend.services.AuthService;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -25,6 +26,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -156,7 +158,7 @@ public class AuthController {
 
     }
 
-    private Optional<String> readRefreshTokenFromRequest(RefreshTokenRequest body, HttpServletRequest request) {
+    private Optional<String> readRefreshTokenFromRequest(RefreshTokenRequest body, @NonNull HttpServletRequest request) {
 
         // 1. prefer reading refresh token from cookie
         if (request.getCookies() != null){
@@ -201,5 +203,26 @@ public class AuthController {
     @PostMapping("/register")
     ResponseEntity<UserDto> registerUser(@RequestBody UserDto userDto){
         return ResponseEntity.status(HttpStatus.CREATED).body(authService.registerUser(userDto));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(HttpServletRequest request,HttpServletResponse response){
+        readRefreshTokenFromRequest(null,request).ifPresent(token -> {
+            try {
+                if (jwtService.isRefreshToken(token)){
+                    String jti = jwtService.getJti(token);
+                    refreshTokenRepository.findByJti(jti).ifPresent(rt -> {
+                        rt.setRevoked(true);
+                        refreshTokenRepository.save(rt);
+                    });
+                }
+            }catch (JwtException ignored){
+
+            }
+        });
+        cookieService.clearRefreshCookie(response);
+        cookieService.addNoStoreHeaders(response);
+        SecurityContextHolder.clearContext();
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }
