@@ -3,6 +3,8 @@ package com.authApp.AuthApp_Backend.security;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.Getter;
 import lombok.Setter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -18,6 +20,7 @@ public class CookieService {
     private final boolean cookieSecure;
     private final String cookieDomain;
     private final String cookieSameSite;
+    private final Logger logger = LoggerFactory.getLogger(CookieService.class);
 
     public CookieService(
             @Value("${security.jwt.refresh-token-cookie-name}") String refreshTokenCookieName,
@@ -35,7 +38,9 @@ public class CookieService {
 
     public void attachRefreshCookie(HttpServletResponse response, String value, int maxAge) {
 
-        var cookieBuilder = ResponseCookie.from(refreshTokenCookieName, value)
+        logger.info("Attaching cookie with name: {} and value: {}",refreshTokenCookieName,value);
+
+        ResponseCookie.ResponseCookieBuilder cookieBuilder = ResponseCookie.from(refreshTokenCookieName, value)
                 .httpOnly(cookieHttpOnly)
                 .secure(cookieSecure)
                 .path("/")
