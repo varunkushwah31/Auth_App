@@ -4,16 +4,16 @@ A robust and secure authentication and authorization backend application built w
 
 ## Features
 
-- 🔐 **JWT Authentication** - Secure token-based authentication with JWT (JSON Web Tokens)
-- 🔄 **Refresh Token** - Automatic token refresh mechanism for extended sessions
-- 🔑 **OAuth2 Support** - Integration with OAuth2 providers for seamless third-party authentication
-- 👤 **User Management** - Complete user registration, login, and profile management
-- 🎯 **Role-Based Access Control** - Fine-grained authorization using roles and permissions
-- 🗄️ **JPA/Hibernate ORM** - Database operations with Spring Data JPA
-- 🔒 **Spring Security** - Enterprise-level security configuration
-- ✅ **Input Validation** - Request validation using Jakarta validation annotations
-- 📝 **Error Handling** - Global exception handling with detailed error responses
-- 🍪 **Cookie Management** - Secure cookie handling for token storage
+- **JWT Authentication** - Secure token-based authentication with JWT (JSON Web Tokens)
+- **Refresh Token** - Automatic token refresh mechanism for extended sessions
+- **OAuth2 Support** - Integration with OAuth2 providers for seamless third-party authentication
+- **User Management** - Complete user registration, login, and profile management
+- **Role-Based Access Control** - Fine-grained authorization using roles and permissions
+- **JPA/Hibernate ORM** - Database operations with Spring Data JPA
+- **Spring Security** - Enterprise-level security configuration
+- **Input Validation** - Request validation using Jakarta validation annotations
+- **Error Handling** - Global exception handling with detailed error responses
+- **Cookie Management** - Secure cookie handling for token storage
 
 ## Tech Stack
 
